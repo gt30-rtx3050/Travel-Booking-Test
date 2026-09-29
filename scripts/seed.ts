@@ -137,6 +137,23 @@ async function main() {
       return existing.docs[0].id
     }
 
+    // Payload's local disk storage de-duplicates on write: when staticDir already contains a
+    // file with the same name it appends `-1`, `-2`, … and records the media document under that
+    // new name. The query above only covers the database, so a fresh seed against a checkout that
+    // already ships public/media/*.svg used to drop one duplicate asset per image into the working
+    // tree on every run. If the file on disk is byte-identical to what we are about to write,
+    // clear it first so the upload lands under its canonical name and the tree stays clean.
+    const staticFile = path.join(mediaDir, filename)
+    if (fs.existsSync(staticFile)) {
+      if (fs.readFileSync(staticFile, 'utf8') === svgContent) {
+        fs.unlinkSync(staticFile)
+      } else {
+        console.warn(
+          `[seed] public/media/${filename} already exists with different content, so it was left untouched. Payload will store the generated asset under a de-duplicated filename.`,
+        )
+      }
+    }
+
     const tmpDir = path.resolve(process.cwd(), '.tmp-media')
     fs.mkdirSync(tmpDir, { recursive: true })
     const tmpFile = path.join(tmpDir, filename)
@@ -149,6 +166,8 @@ async function main() {
     })
 
     if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile)
+    // No stray scratch directory left behind once the last asset has been uploaded.
+    if (fs.readdirSync(tmpDir).length === 0) fs.rmdirSync(tmpDir)
     return doc.id
   }
 
