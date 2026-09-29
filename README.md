@@ -116,6 +116,51 @@ byte-identical file on disk before uploading, which keeps the tree clean and the
 their canonical filenames. A file that differs from the generated art is never overwritten — the
 seed warns and lets Payload store the new asset under a de-duplicated name.
 
+## Vercel deployment & troubleshooting MongoDB auth
+
+### The `bad auth : authentication failed` build error
+
+If `next build` on Vercel fails with:
+
+```
+[15:39:00] ERROR: Error: cannot connect to MongoDB. Details: bad auth : authentication failed
+  MongoServerError: bad auth : authentication failed
+  code: 8000, codeName: AtlasError
+```
+
+The cause is almost always an invalid `DATABASE_URI`:
+
+1. **You copied the Atlas example with `< >` brackets**  
+   Atlas UI shows: `mongodb+srv://user:<password>@cluster...`  
+   The `< >` are placeholders. You must remove them:  
+   `mongodb+srv://user:MyActualPassword@cluster...`  
+   If your password contains `@ / : ? # [ ]` etc, URL-encode it (`@` → `%40`, `/` → `%2F`).
+
+2. **Build was trying to connect to Atlas**  
+   Previously `src/payload.config.ts` would try to connect to whatever `DATABASE_URI` was set during `next build`.  
+   Now it detects `NEXT_PHASE=phase-production-build` and forces the local shim so the build never depends on external Atlas.  
+   At runtime on Vercel, the real `DATABASE_URI` is used.
+
+3. **Fix for Vercel env vars**  
+   - In Vercel dashboard → Project → Settings → Environment Variables, set:  
+     `DATABASE_URI=mongodb+srv://<username>:<url-encoded-password>@<cluster>.mongodb.net/<db>?retryWrites=true&w=majority`  
+     No `< >` characters.  
+   - Also set `PAYLOAD_SECRET` (32+ chars random), `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SERVER_URL`, `PAYLOAD_PUBLIC_SERVER_URL` to your Vercel URL.  
+   - Ensure the Atlas cluster Network Access allows `0.0.0.0/0` (or Vercel IPs) and the DB user exists.
+
+4. **How the code now protects the build**  
+   - `src/payload.config.ts` validates `DATABASE_URI`. If it contains `<` or `>` or is empty, it logs a warning and falls back to `mongodb://127.0.0.1:27017/celeste-voyages` which boots `scripts/local-mongo-server.mjs`.  
+   - During `NEXT_PHASE=phase-production-build` it always uses the local shim.  
+   - `src/lib/payload.ts` wraps every data fetch in try/catch and returns fallback navigation/siteSettings or empty arrays, so frontend layout never crashes the build.  
+   - `src/app/(frontend)/layout.tsx` and `src/app/(payload)/layout.tsx` are marked `dynamic = 'force-dynamic'` to avoid static prerendering that would require DB.
+
+After fixing `DATABASE_URI`, redeploy. You can test locally with an invalid URI:
+
+```bash
+DATABASE_URI="mongodb+srv://user:<bad>@cluster.net/db" NEXT_PHASE=phase-production-build npm run build
+# should succeed using local shim
+```
+
 ## Email
 
 With `RESEND_API_KEY` set, booking and contact submissions send a guest confirmation and an admin
