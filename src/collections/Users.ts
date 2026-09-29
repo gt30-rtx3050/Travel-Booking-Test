@@ -14,15 +14,21 @@ export const Users: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      // Ensure the first user ever created is promoted to admin so they can
-      // manage the system (the role field defaults to "editor").
-      async ({ req, data }) => {
+      async ({ req, data, operation }) => {
+        if (!data || operation !== 'create') return data
+
+        // Allow the first account to bootstrap the site as an administrator.
         if (!req.user) {
           const { totalDocs } = await req.payload.count({ collection: 'users' })
-          if (totalDocs === 0 && data) {
-            return { ...data, role: 'admin' }
-          }
+          if (totalDocs === 0) return { ...data, role: 'admin' }
         }
+
+        // Authenticated editors may add teammates, but must never be able to
+        // grant administrator privileges. Admins can still choose either role.
+        if (req.user && req.user.role !== 'admin') {
+          return { ...data, role: 'editor' }
+        }
+
         return data
       },
     ],
@@ -30,20 +36,16 @@ export const Users: CollectionConfig = {
   access: {
     read: () => true,
     create: async ({ req: { user, payload } }) => {
-      // First-user bootstrap: anyone can create the very first user so the
-      // admin panel's "Create First User" screen works on an empty database.
+      // First-user bootstrap: allow creation without a session only while the
+      // database is empty. After that, any authenticated user may add a teammate;
+      // the hook above limits non-admin-created accounts to the editor role.
       if (!user) {
         const { totalDocs } = await payload.count({ collection: 'users' })
         return totalDocs === 0
       }
-      // Once users exist, only admins can create additional accounts.
-      return user.role === 'admin'
+      return true
     },
-    update: ({ req: { user } }) => {
-      // Users can update their own account; admins can update any account.
-      if (!user) return false
-      return user.role === 'admin'
-    },
+    update: ({ req: { user } }) => Boolean(user && user.role === 'admin'),
     delete: ({ req: { user } }) => Boolean(user && user.role === 'admin'),
   },
   fields: [
@@ -59,6 +61,12 @@ export const Users: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'editor',
+      // Keep role assignment an administrator-only capability in both the UI
+      // and API. The collection hook also enforces this on every create.
+      access: {
+        create: ({ req: { user } }) => Boolean(user && user.role === 'admin'),
+        update: ({ req: { user } }) => Boolean(user && user.role === 'admin'),
+      },
       options: [
         { label: 'Administrator', value: 'admin' },
         { label: 'Editorial Manager', value: 'editor' },
