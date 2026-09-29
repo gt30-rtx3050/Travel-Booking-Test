@@ -8,7 +8,7 @@ the Payload Local API.
 
 | Concern | Choice |
 | --- | --- |
-| Framework | Next.js 15.3, React 19, App Router |
+| Framework | Next.js 15.5, React 19, App Router |
 | CMS | Payload 3.60 (Local API only — no REST/GraphQL queries from components) |
 | Database | MongoDB, via `@payloadcms/db-mongodb` |
 | Rich text | `@payloadcms/richtext-lexical` |
@@ -30,6 +30,19 @@ npm run dev            # http://localhost:3000 · admin UI at /admin
 
 The seeded admin account is `admin@celeste-expeditions.com` / `CelesteExpeditions2026!`
 (set in `scripts/seed.ts`). It is a development credential only — change it anywhere real.
+
+## Install scripts
+
+npm 11.16+ tracks which dependencies are allowed to run `postinstall`/`install` scripts. The
+`allowScripts` block in `package.json` names the three packages in this tree that need to: `esbuild`
+(used by `tsx` for `npm run seed` and by Payload's own CLI), `sharp` (Payload image processing), and
+`fsevents` (macOS file watching). Without the block, `npm install` prints an
+`install-scripts ... not yet covered by allowScripts` warning, and npm 12 will hard-block those
+scripts instead of warning.
+
+The entries are name-only rather than version-pinned, so a routine `npm update` does not reintroduce
+the warning. When you add a dependency with an install script, review it and then either run
+`npm approve-scripts <pkg> --no-allow-scripts-pin` or add the entry by hand.
 
 ## How the database is resolved
 

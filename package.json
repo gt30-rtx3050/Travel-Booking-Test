@@ -14,6 +14,11 @@
     "generate:importmap": "payload generate:importmap",
     "typecheck": "tsc --noEmit"
   },
+  "allowScripts": {
+    "esbuild": true,
+    "fsevents": true,
+    "sharp": true
+  },
   "dependencies": {
     "@fontsource/archivo": "^5.3.0",
     "@fontsource/plus-jakarta-sans": "^5.3.0",
@@ -28,11 +33,11 @@
     "framer-motion": "^12.6.3",
     "graphql": "^16.9.0",
     "lucide-react": "^0.487.0",
-    "next": "15.3.2",
+    "next": "15.5.26",
     "nodemailer": "^6.10.0",
     "payload": "3.60.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "19.1.9",
+    "react-dom": "19.1.9",
     "react-hook-form": "^7.55.0",
     "resend": "^4.2.0",
     "sharp": "^0.33.5",
@@ -42,11 +47,10 @@
   "devDependencies": {
     "@types/node": "^22.13.10",
     "@types/nodemailer": "^6.4.17",
-    "@types/react": "19.1.0",
-    "@types/react-dom": "19.1.0",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
     "autoprefixer": "^10.4.21",
     "mingo": "^7.2.4",
-    "mongodb-memory-server": "^10.1.4",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.3",
