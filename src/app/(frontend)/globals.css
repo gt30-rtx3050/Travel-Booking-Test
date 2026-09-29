@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-ice: #caf0f8;
+    --color-sky: #90e0ef;
+    --color-cyan: #00b4d8;
+    --color-ocean: #0077b6;
+    --color-navy: #03045e;
+    --color-white: #ffffff;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    background-color: #ffffff;
+    color: #03045e;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #03045e;
+    font-family: var(--font-archivo), 'Archivo', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-grift), 'Grift', sans-serif;
+    color: #03045e;
+  }
+
+  ::selection {
+    background-color: #90e0ef;
+    color: #03045e;
+  }
+}
