@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { bookingFormSchema, type BookingFormValues } from '@/lib/schemas'
 import { submitBookingAction } from '@/app/actions'
-import { formatCurrency } from '@/lib/payload'
+import { formatCurrency } from '@/lib/utils'
 
 export interface AvailabilityItem {
   id?: string | null

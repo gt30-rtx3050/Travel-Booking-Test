@@ -41,7 +41,11 @@ export async function submitBookingAction(rawData: BookingFormValues): Promise<A
       message: parsed.data.message,
     })
 
-    revalidatePath('/trips')
+    try {
+      revalidatePath('/trips')
+    } catch {
+      // Gracefully ignore if invoked outside Next.js request context
+    }
     const params = new URLSearchParams({
       type: 'booking',
       ref: String(booking.id).slice(-6).toUpperCase(),

@@ -363,34 +363,5 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
   return res.docs
 }
 
-/**
- * Helper to resolve a Payload Media relationship to a safe image URL and alt text.
- */
-export function resolveMediaUrl(
-  media: string | Media | null | undefined,
-  fallbackUrl = '/media/alpine-hero.svg',
-): { url: string; alt: string; caption?: string | null } {
-  if (!media) {
-    return { url: fallbackUrl, alt: 'Celeste Expeditions' }
-  }
-  if (typeof media === 'string') {
-    return { url: fallbackUrl, alt: 'Celeste Expeditions' }
-  }
-  const url = media.url || (media.filename ? `/media/${media.filename}` : fallbackUrl)
-  return {
-    url,
-    alt: media.alt || 'Celeste Expeditions',
-    caption: media.caption,
-  }
-}
+export { resolveMediaUrl, formatCurrency } from './utils'
 
-/**
- * Format currency nicely.
- */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency || 'USD',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
